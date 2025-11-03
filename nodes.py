@@ -4,8 +4,10 @@ import math
 import torch
 import torch
 import numpy as np
-from PIL import Image   
-
+from PIL import Image
+import json
+import os
+import copy
 
 class CropWithPadInfo:
     @classmethod
@@ -200,6 +202,27 @@ class TextEncodeQwenImageEdit_lrzjason:
             
         return (conditioning, image, {"samples":ref_latent}, )
 
+def get_system_prompt(instruction):
+    template_prefix = "<|im_start|>system\n"
+    template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+    instruction_content = ""
+    if instruction == "":
+        instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
+    else:
+        # for handling mis use of instruction
+        if template_prefix in instruction:
+            # remove prefix from instruction
+            instruction = instruction.split(template_prefix)[1]
+        if template_suffix in instruction:
+            # remove suffix from instruction
+            instruction = instruction.split(template_suffix)[0]
+        if "{}" in instruction:
+            # remove {} from instruction
+            instruction = instruction.replace("{}", "")
+        instruction_content = instruction
+    llama_template = template_prefix + instruction_content + template_suffix
+    
+    return llama_template
 
 class TextEncodeQwenImageEditPlus_lrzjason:
     upscale_methods = ["lanczos", "bicubic", "area"]
@@ -247,24 +270,25 @@ class TextEncodeQwenImageEditPlus_lrzjason:
         images = [image1, image2, image3, image4, image5]
         images_vl = []
         vae_images = []
-        template_prefix = "<|im_start|>system\n"
-        template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
-        instruction_content = ""
-        if instruction == "":
-            instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
-        else:
-            # for handling mis use of instruction
-            if template_prefix in instruction:
-                # remove prefix from instruction
-                instruction = instruction.split(template_prefix)[1]
-            if template_suffix in instruction:
-                # remove suffix from instruction
-                instruction = instruction.split(template_suffix)[0]
-            if "{}" in instruction:
-                # remove {} from instruction
-                instruction = instruction.replace("{}", "")
-            instruction_content = instruction
-        llama_template = template_prefix + instruction_content + template_suffix
+        # template_prefix = "<|im_start|>system\n"
+        # template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+        # instruction_content = ""
+        # if instruction == "":
+        #     instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
+        # else:
+        #     # for handling mis use of instruction
+        #     if template_prefix in instruction:
+        #         # remove prefix from instruction
+        #         instruction = instruction.split(template_prefix)[1]
+        #     if template_suffix in instruction:
+        #         # remove suffix from instruction
+        #         instruction = instruction.split(template_suffix)[0]
+        #     if "{}" in instruction:
+        #         # remove {} from instruction
+        #         instruction = instruction.replace("{}", "")
+        #     instruction_content = instruction
+        # llama_template = template_prefix + instruction_content + template_suffix
+        llama_template = get_system_prompt(instruction)
         image_prompt = ""
 
         for i, image in enumerate(images):
@@ -396,24 +420,25 @@ class TextEncodeQwenImageEditPlusAdvance_lrzjason:
         
         vae_images = []
         vl_images = []
-        template_prefix = "<|im_start|>system\n"
-        template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
-        instruction_content = ""
-        if instruction == "":
-            instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
-        else:
-            # for handling mis use of instruction
-            if template_prefix in instruction:
-                # remove prefix from instruction
-                instruction = instruction.split(template_prefix)[1]
-            if template_suffix in instruction:
-                # remove suffix from instruction
-                instruction = instruction.split(template_suffix)[0]
-            if "{}" in instruction:
-                # remove {} from instruction
-                instruction = instruction.replace("{}", "")
-            instruction_content = instruction
-        llama_template = template_prefix + instruction_content + template_suffix
+        # template_prefix = "<|im_start|>system\n"
+        # template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+        # instruction_content = ""
+        # if instruction == "":
+        #     instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
+        # else:
+        #     # for handling mis use of instruction
+        #     if template_prefix in instruction:
+        #         # remove prefix from instruction
+        #         instruction = instruction.split(template_prefix)[1]
+        #     if template_suffix in instruction:
+        #         # remove suffix from instruction
+        #         instruction = instruction.split(template_suffix)[0]
+        #     if "{}" in instruction:
+        #         # remove {} from instruction
+        #         instruction = instruction.replace("{}", "")
+        #     instruction_content = instruction
+        # llama_template = template_prefix + instruction_content + template_suffix
+        llama_template = get_system_prompt(instruction)
         image_prompt = ""
 
         if vae is not None:
@@ -587,8 +612,6 @@ class TextEncodeQwenImageEditPlusPro_lrzjason:
                ):
         # check vl_resize_indexs is valid indexes and not out of range
         resize_indexs = validate_vl_resize_indexs(vl_resize_indexs,5)
-        
-        
         pad_info = {
             "x": 0,
             "y": 0,
@@ -611,24 +634,25 @@ class TextEncodeQwenImageEditPlusPro_lrzjason:
         
         vae_images = []
         vl_images = []
-        template_prefix = "<|im_start|>system\n"
-        template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
-        instruction_content = ""
-        if instruction == "":
-            instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
-        else:
-            # for handling mis use of instruction
-            if template_prefix in instruction:
-                # remove prefix from instruction
-                instruction = instruction.split(template_prefix)[1]
-            if template_suffix in instruction:
-                # remove suffix from instruction
-                instruction = instruction.split(template_suffix)[0]
-            if "{}" in instruction:
-                # remove {} from instruction
-                instruction = instruction.replace("{}", "")
-            instruction_content = instruction
-        llama_template = template_prefix + instruction_content + template_suffix
+        # template_prefix = "<|im_start|>system\n"
+        # template_suffix = "<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n"
+        # instruction_content = ""
+        # if instruction == "":
+        #     instruction_content = "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."
+        # else:
+        #     # for handling mis use of instruction
+        #     if template_prefix in instruction:
+        #         # remove prefix from instruction
+        #         instruction = instruction.split(template_prefix)[1]
+        #     if template_suffix in instruction:
+        #         # remove suffix from instruction
+        #         instruction = instruction.split(template_suffix)[0]
+        #     if "{}" in instruction:
+        #         # remove {} from instruction
+        #         instruction = instruction.replace("{}", "")
+        #     instruction_content = instruction
+        # llama_template = template_prefix + instruction_content + template_suffix
+        llama_template = get_system_prompt(instruction)
         image_prompt = ""
 
         if vae is not None:
@@ -738,19 +762,546 @@ class TextEncodeQwenImageEditPlusPro_lrzjason:
         
         return (conditioning_full_ref, latent_out, image1, image2, image3, image4, image5, conditioning_with_main_ref, pad_info)
 
+
+class TextEncodeQwenImageEditPlusCustom_lrzjason:
+    # upscale_methods = ["lanczos", "bicubic", "area"]
+    # crop_methods = ["pad", "center", "disabled"]
+    # example_config = {
+    #     "image": None,
+    #     # ref part
+    #     "to_ref": True,
+    #     "ref_main_image": True,
+    #     "ref_longest_edge": 1024,
+    #     "ref_crop": "center", #"pad" for main image, "center", "disabled"
+    #     "ref_upscale": "lanczos",
+        
+    #     # vl part
+    #     "to_vl": True,
+    #     "vl_resize": True,
+    #     "vl_target_size": 384,
+    #     "vl_crop": "center",
+    #     "vl_upscale": "bicubic", #to scale image down, "bicubic", "area" might better than "lanczos"
+    # }
+    # example_output = {
+    #     "pad_info": pad_info,
+    #     "noise_mask": noise_mask,
+    #     "full_refs_cond": conditioning,
+    #     "main_ref_cond": conditioning_only_with_main_ref,
+    #     "main_image": main_image,
+    #     "vae_images": vae_images,
+    #     "ref_latents": ref_latents,
+    #     "vl_images": vl_images,
+    #     "full_prompt": full_prompt,
+    #     "llama_template": llama_template
+    # }
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "clip": ("CLIP", ),
+                "vae": ("VAE", ),
+                "prompt": ("STRING", {"multiline": True, "dynamicPrompts": True}),
+                "configs": ("LIST", {"default": None})
+            },
+            "optional": 
+            {
+                "return_full_refs_cond": ("BOOLEAN", {"default": True}),
+                # "set_noise_mask": ("BOOLEAN", {"default": False, "tooltip": "Only useful when using ref_crop == pad. It would automatically mask out the padding area."}),
+                "instruction": ("STRING", {"multiline": True, "default": "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate."}),   
+            }
+        }
+
+    RETURN_TYPES = ("CONDITIONING", "LATENT", "ANY")
+    RETURN_NAMES = ("conditioning", "latent", "custom_output")
+    FUNCTION = "encode"
+
+    CATEGORY = "advanced/conditioning"
+    def encode(self, clip, vae, prompt, 
+               configs=None,
+               return_full_refs_cond=True,
+            #    set_noise_mask=False,
+               instruction="",
+        ):
+        print("len(configs)")
+        print(len(configs))
+        llama_template = get_system_prompt(instruction)
+        image_prompt = ""
+        
+        pad_info = {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "scale_by": 1.0,
+        }
+        print("len(configs)", len(configs))
+        # check len(configs)
+        assert len(configs) > 0, "No image provided"
+        
+        main_image_index = -1
+        for i, image_obj in enumerate(configs):
+            if image_obj["to_ref"]:
+                if image_obj["ref_main_image"]:
+                    main_image_index = i
+                    continue
+                # ensure only one main image
+                if main_image_index != -1:
+                    image_obj["ref_main_image"] = False
+        if main_image_index == -1:
+            print("\n Auto fixing main_image_index to the first image index")
+            main_image_index = 0
+        
+        ref_latents = []
+        vae_images = []
+        vl_images = []
+        
+        # noise_mask = None
+        for i, image_obj in enumerate(configs):
+            assert "image" in image_obj, "Image is missing"
+            image = image_obj["image"]
+            to_ref = image_obj["to_ref"]
+            ref_main_image = image_obj["ref_main_image"]
+            ref_longest_edge = image_obj["ref_longest_edge"]
+            ref_crop = image_obj["ref_crop"]
+            ref_upscale = image_obj["ref_upscale"]
+            
+            to_vl = image_obj["to_vl"]
+            vl_resize = image_obj["vl_resize"]
+            vl_target_size = image_obj["vl_target_size"]
+            vl_crop = image_obj["vl_crop"]
+            vl_upscale = image_obj["vl_upscale"]
+            
+            print("to_ref",to_ref)
+            print("ref_main_image",ref_main_image)
+            print("ref_longest_edge",ref_longest_edge)
+            print("ref_crop",ref_crop)
+            print("ref_upscale",ref_upscale)
+            
+            
+            if not to_ref and not to_vl:
+                continue
+            if to_ref:
+                samples = image.movedim(-1, 1)
+                print("ori_image.shape",samples.shape)
+                ori_height, ori_width = samples.shape[2:]
+                print("ori_height, ori_width", ori_height, ori_width)
+                ori_aspect_ratio = samples.shape[2] / samples.shape[3]
+                shorter_edge = round(ref_longest_edge * ( 1 / ori_aspect_ratio))
+                if samples.shape[2] > samples.shape[3]:
+                    scaled_height = ref_longest_edge
+                    scaled_width = shorter_edge
+                else:
+                    scaled_height = shorter_edge
+                    scaled_width = ref_longest_edge
+                
+                # pad only apply to main image
+                if ref_crop == "pad" and ref_main_image:
+                    print("In pad mode")
+                    print("scaled_width", scaled_width)
+                    print("scaled_height", scaled_height)
+                    crop = "center"
+                    canvas_width = math.ceil(scaled_width / 8.0) * 8
+                    canvas_height = math.ceil(scaled_height / 8.0) * 8
+                    print("canvas_width", canvas_width)
+                    print("canvas_height", canvas_height)
+                    
+                    # pad image to canvas size
+                    canvas = torch.zeros(
+                        (samples.shape[0], samples.shape[1], canvas_height, canvas_width),
+                        dtype=samples.dtype,
+                        device=samples.device
+                    )
+                    resized_samples = comfy.utils.common_upscale(samples, scaled_width, scaled_height, ref_upscale, crop)
+                    print("resized_samples.shape", resized_samples.shape)
+                    print("samples.shape", samples.shape)
+                    print("canvas.shape", canvas.shape)
+                    resized_width = resized_samples.shape[3]
+                    resized_height = resized_samples.shape[2]
+                    
+                    # x_offset = (canvas_width - resized_width) // 2
+                    # y_offset = (canvas_height - resized_height) // 2
+                    # print("x_offset", x_offset)
+                    # print("y_offset", y_offset)
+                    
+                    # set resized samples to canvas
+                    # canvas[:, :, x_offset:resized_height, y_offset:resized_width] = resized_samples
+                    canvas[:, :, :resized_height, :resized_width] = resized_samples
+                    
+                    # if set_noise_mask:
+                        # noise_mask = torch.zeros(canvas.shape, dtype=torch.bool, device=canvas.device)
+                        # noise_mask[:, :, x_offset:resized_height, y_offset:resized_width] = 1.0
+                        # print("noise_mask.shape", noise_mask.shape)
+                        # noise_mask = noise_mask.movedim(1, -1)
+                        # print("movedim noise_mask.shape", noise_mask.shape)
+                    
+                    # only return main image pad info
+                    
+                    current_total = (samples.shape[3] * samples.shape[2])
+                    total = int(resized_width * resized_height)
+                    scale_by = math.sqrt(total / current_total)
+                    pad_info = {
+                        "x": 0,
+                        "y": 0,
+                        "width": canvas_width - resized_width,
+                        "height": canvas_height - resized_height,
+                        "scale_by": 1 / scale_by
+                    }
+                    
+                    print("pad_info", pad_info)
+                    s = canvas
+                else:
+                    crop = ref_crop
+                    # handle pad method when not main image
+                    if ref_crop == "pad":
+                        crop = "center"
+                    width = round(scaled_width / 8.0) * 8
+                    height = round(scaled_height / 8.0) * 8
+                    print("width",width)
+                    print("height",height)
+                    s = comfy.utils.common_upscale(samples, width, height, ref_upscale, crop)
+                image = s.movedim(1, -1)
+                ref_latents.append(vae.encode(image[:, :, :, :3]))
+                vae_images.append(image)
+
+            if to_vl:
+                if vl_resize:
+                    # print("vl_resize")
+                    total = int(vl_target_size * vl_target_size)
+                else:
+                    total = int(samples.shape[3] * samples.shape[2])
+                    if total > 2048 * 2048:
+                        print("vl_target_size too large, clipping to 2048")
+                        total = 2048 * 2048
+                current_total = (samples.shape[3] * samples.shape[2])
+                scale_by = math.sqrt(total / current_total)
+            
+                width = round(samples.shape[3] * scale_by)
+                height = round(samples.shape[2] * scale_by)
+                s = comfy.utils.common_upscale(samples, width, height, vl_upscale, vl_crop)
+                
+                image = s.movedim(1, -1)
+                # handle non resize vl images
+                image_prompt += "Picture {}: <|vision_start|><|image_pad|><|vision_end|>".format(i + 1)
+                vl_images.append(image)
+
+        full_prompt = image_prompt + prompt
+        tokens = clip.tokenize(full_prompt, images=vl_images, llama_template=llama_template)
+        conditioning = clip.encode_from_tokens_scheduled(tokens)
+        samples = torch.zeros(1, 4, 128, 128)
+        conditioning_only_with_main_ref = None
+        if len(ref_latents) > 0:
+            conditioning_only_with_main_ref = node_helpers.conditioning_set_values(conditioning, {"reference_latents": [ref_latents[main_image_index]]}, append=True)
+            conditioning = node_helpers.conditioning_set_values(conditioning, {"reference_latents": ref_latents}, append=True)
+            samples = ref_latents[main_image_index]
+        latent_out = {"samples": samples}
+        
+        # if set_noise_mask:
+        #     latent_out["noise_mask"] = noise_mask
+        
+        conditioning_output = conditioning
+        if not return_full_refs_cond:
+            conditioning_output = conditioning_only_with_main_ref
+        
+        main_image = vae_images[main_image_index]
+        
+        custom_output = {
+            "pad_info": pad_info,
+            # "noise_mask": noise_mask,
+            "full_refs_cond": conditioning,
+            "main_ref_cond": conditioning_only_with_main_ref,
+            "main_image": main_image,
+            "vae_images": vae_images,
+            "ref_latents": ref_latents,
+            "vl_images": vl_images,
+            "full_prompt": full_prompt,
+            "llama_template": llama_template
+        }
+        
+        return (conditioning_output, latent_out, custom_output)
+
+
+class QwenEditConfigJsonParser():
+    default_config = {
+        "to_ref": True,
+        "ref_main_image": False,
+        "ref_longest_edge": 1024,
+        "ref_crop": "center",
+        "ref_upscale": "lanczos",
+        "to_vl": True,
+        "vl_resize": True,
+        "vl_target_size": 384,
+        "vl_crop": "center",
+        "vl_upscale": "bicubic"
+    }
+    
+    default_config_json = """{
+    "to_ref": true,
+    "ref_main_image": false,
+    "ref_longest_edge": 1024,
+    "ref_crop": "center",
+    "ref_upscale": "lanczos",
+    "to_vl": true,
+    "vl_resize": true,
+    "vl_target_size": 384,
+    "vl_crop": "center",
+    "vl_upscale": "bicubic"
+}"""
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "image": ("IMAGE", ),
+            },
+            "optional": 
+            {
+                "configs": ("LIST", {"default": None, "tooltip": "Configs list"}),
+                "config_json": ("STRING", {"default": s.default_config_json, "multiline": True, "tooltip": "Config JSON String"}),
+            }
+        }
+
+    RETURN_TYPES = ("LIST", "ANY", )
+    RETURN_NAMES = ("configs", "config", )
+    FUNCTION = "prepare_config"
+    CATEGORY = "advanced/conditioning"
+    def prepare_config(self, image, configs=None,
+                config_json=""
+        ):
+        if configs is None:
+            configs = []
+        # print("len(configs)", len(configs))
+        
+        config = self.default_config.copy()
+        try:
+            json_config = json.loads(config_json)
+        except Exception as e:
+            print(f"An error occurred while loading json_config")
+            print(json_config)
+        
+        config.update(json_config)
+        config["image"] = image
+        
+        configs.append(config)
+        # print("len(configs)", len(configs))
+        return (configs, config, )
+
+class QwenEditConfigPreparer:
+    upscale_methods = ["lanczos", "bicubic", "area"]
+    crop_methods = ["pad", "center", "disabled"]
+    vl_crop_methods = ["center", "disabled"]
+    
+    # example_config = {
+    #     "image": None,
+    #     # ref part
+    #     "to_ref": True,
+    #     "ref_main_image": True,
+    #     "ref_longest_edge": 1024,
+    #     "ref_crop": "center", #"pad" for main image, "center", "disabled"
+    #     "ref_upscale": "lanczos",
+        
+    #     # vl part
+    #     "to_vl": True,
+    #     "vl_resize": True,
+    #     "vl_target_size": 384,
+    #     "vl_crop": "center",
+    #     "vl_upscale": "bicubic", #to scale image down, "bicubic", "area" might better than "lanczos"
+    # }   
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "image": ("IMAGE", ),
+            },
+            "optional": 
+            {
+                "configs": ("LIST", {"default": None, "tooltip": "Configs list"}),
+                "to_ref": ("BOOLEAN", {"default": True, "tooltip": "Add image to reference latent"}),
+                "ref_main_image": ("BOOLEAN", {"default": True, "tooltip": "Set image as main image which would return the latent as output."}),
+                "ref_longest_edge": ("INT", {"default": 1024, "min": 512, "max": 4096, "step": 8, "tooltip": "Longest edge of the output latent"}),
+                "ref_crop": (s.crop_methods, {"default": "pad", "tooltip": "Crop method for reference image"}),
+                "ref_upscale": (s.upscale_methods, {"default": "lanczos", "tooltip": "Upscale method for reference image"}),
+    
+                "to_vl": ("BOOLEAN", {"default": True, "tooltip": "Add image to qwenvl 2.5 encode"}),
+                "vl_resize": ("BOOLEAN", {"default": True, "tooltip": "Resize image before qwenvl 2.5 encode"}),
+                "vl_target_size": ("INT", {"default": 384, "min": 384, "max": 2048, "tooltip": "Target size of the qwenvl 2.5 encode"}),
+                "vl_crop": (s.vl_crop_methods, {"default": "center", "tooltip": "Crop method for reference image"}),
+                "vl_upscale": (s.upscale_methods, {"default": "lanczos", "tooltip": "Upscale method for reference image"}),
+            }
+        }
+
+    RETURN_TYPES = ("LIST", "ANY", )
+    RETURN_NAMES = ("configs", "config", )
+    FUNCTION = "prepare_config"
+
+    CATEGORY = "advanced/conditioning"
+    def prepare_config(self, image, configs=None,
+                to_ref=True, ref_main_image=True, ref_longest_edge=1024, ref_crop="center", ref_upscale="lanczos",
+                to_vl=True, vl_resize=True, vl_target_size=384, vl_crop="center", vl_upscale="bicubic"
+        ):
+        if configs is None:
+            configs = []
+        # print("len(configs)", len(configs))
+        # print("configs")
+        # print(configs)
+        config = {
+            "image": image,
+            "to_ref": to_ref,
+            "ref_main_image": ref_main_image,
+            "ref_longest_edge": ref_longest_edge,
+            "ref_crop": ref_crop,
+            "ref_upscale": ref_upscale,
+            
+            "to_vl": to_vl,
+            "vl_resize": vl_resize,
+            "vl_target_size": vl_target_size,
+            "vl_crop": vl_crop,
+            "vl_upscale": vl_upscale
+        }
+        
+        if configs is None:
+            configs = []
+        
+        configs.append(config)
+        # print("len(configs)", len(configs))
+        return (configs, config, )
+
+class QwenEditOutputExtractor:
+    preset_keys = [
+        "pad_info",
+        # "noise_mask",
+        "full_refs_cond",
+        "main_ref_cond",
+        "main_image",
+        "vae_images",
+        "ref_latents",
+        "vl_images",
+        "full_prompt",
+        "llama_template"
+    ]
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "custom_output": ("ANY", ),
+            }
+        }
+
+    # RETURN_TYPES = ("ANY", "MASK", "CONDITIONING", "CONDITIONING", "IMAGE", "LIST", "LIST", "LIST", "STRING", "STRING")
+    # RETURN_NAMES = ("pad_info", "noise_mask", "full_refs_cond", "main_ref_cond", "main_image", "vae_images", "ref_latents", "vl_images", "full_prompt", "llama_template")
+    
+    RETURN_TYPES = ("ANY", "CONDITIONING", "CONDITIONING", "IMAGE", "LIST", "LIST", "LIST", "STRING", "STRING")
+    RETURN_NAMES = ("pad_info", "full_refs_cond", "main_ref_cond", "main_image", "vae_images", "ref_latents", "vl_images", "full_prompt", "llama_template")
+    FUNCTION = "extract"
+
+    CATEGORY = "advanced/conditioning"
+    
+    def extract(self, custom_output):
+        pad_info = custom_output['pad_info']
+        # noise_mask = custom_output['noise_mask']
+        full_refs_cond = custom_output['full_refs_cond']
+        main_ref_cond = custom_output['main_ref_cond']
+        main_image = custom_output['main_image']
+        vae_images = custom_output['vae_images']
+        ref_latents = custom_output['ref_latents']
+        vl_images = custom_output['vl_images']
+        full_prompt = custom_output['full_prompt']
+        llama_template = custom_output['llama_template']
+        
+        # return (pad_info, noise_mask, full_refs_cond, main_ref_cond, main_image, vae_images, ref_latents, vl_images, full_prompt, llama_template )
+        return (pad_info, full_refs_cond, main_ref_cond, main_image, vae_images, ref_latents, vl_images, full_prompt, llama_template )
+
+
+
+class QwenEditListExtractor():
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "items": ("LIST", ),
+                "index": ("INT", {"default": 0, "min": 0, "max": 1000000, "step": 1, "tooltip": "Index of the image"}),
+            }
+        }
+
+    RETURN_TYPES = ("ANY", )
+    RETURN_NAMES = ("item", )
+    FUNCTION = "extract"
+
+    CATEGORY = "advanced/conditioning"
+    def extract(self, items, index):
+        assert index < len(items), f"Index out of range, len(image_list): {len(items)}"
+        
+        return (items[index], )
+
+
+class QwenEditAny2Image():
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "item": ("ANY", ),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", )
+    RETURN_NAMES = ("item", )
+    FUNCTION = "extract"
+
+    CATEGORY = "advanced/conditioning"
+    def extract(self, item):
+        return (item, )
+
+
+class QwenEditAny2Latent():
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": 
+            {
+                "item": ("ANY", ),
+            }
+        }
+
+    RETURN_TYPES = ("LATENT", )
+    RETURN_NAMES = ("item", )
+    FUNCTION = "extract"
+
+    CATEGORY = "advanced/conditioning"
+    def extract(self, item):
+        latent_out = {"samples": item}
+        return (latent_out, )  
+        
 NODE_CLASS_MAPPINGS = {
     "CropWithPadInfo": CropWithPadInfo,
     "TextEncodeQwenImageEdit_lrzjason": TextEncodeQwenImageEdit_lrzjason,
     "TextEncodeQwenImageEditPlus_lrzjason": TextEncodeQwenImageEditPlus_lrzjason,
     "TextEncodeQwenImageEditPlusAdvance_lrzjason": TextEncodeQwenImageEditPlusAdvance_lrzjason,
     "TextEncodeQwenImageEditPlusPro_lrzjason": TextEncodeQwenImageEditPlusPro_lrzjason,
+    "TextEncodeQwenImageEditPlusCustom_lrzjason": TextEncodeQwenImageEditPlusCustom_lrzjason,
+    "QwenEditOutputExtractor": QwenEditOutputExtractor,
+    "QwenEditConfigPreparer": QwenEditConfigPreparer,
+    "QwenEditConfigJsonParser": QwenEditConfigJsonParser,
+    "QwenEditListExtractor": QwenEditListExtractor,
+    "QwenEditAny2Image": QwenEditAny2Image,
+    "QwenEditAny2Latent": QwenEditAny2Latent
 }
 
 # Display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
     "CropWithPadInfo": "Crop With Pad Info",
-    "TextEncodeQwenImageEdit_lrzjason": "TextEncodeQwenImageEdit 小志Jason(xiaozhijason)",
-    "TextEncodeQwenImageEditPlus_lrzjason": "TextEncodeQwenImageEditPlus 小志Jason(xiaozhijason)",
-    "TextEncodeQwenImageEditPlusAdvance_lrzjason": "TextEncodeQwenImageEditPlusAdvance 小志Jason(xiaozhijason)",
-    "TextEncodeQwenImageEditPlusPro_lrzjason": "TextEncodeQwenImageEditPlusPro 小志Jason(xiaozhijason)",
+    "TextEncodeQwenImageEdit_lrzjason": "TextEncodeQwenImageEdit lrzjason",
+    "TextEncodeQwenImageEditPlus_lrzjason": "TextEncodeQwenImageEditPlus lrzjason",
+    "TextEncodeQwenImageEditPlusAdvance_lrzjason": "TextEncodeQwenImageEditPlusAdvance lrzjason",
+    "TextEncodeQwenImageEditPlusPro_lrzjason": "TextEncodeQwenImageEditPlusPro lrzjason",
+    "TextEncodeQwenImageEditPlusCustom_lrzjason": "TextEncodeQwenImageEditPlusCustom lrzjason",
+    "QwenEditOutputExtractor": "Qwen Edit Output Extractor",
+    "QwenEditConfigPreparer": "Qwen Edit Config Preparer",
+    "QwenEditConfigJsonParser": "Qwen Edit Config Json Parser",
+    "QwenEditListExtractor": "Qwen Edit List Extractor",
+    "QwenEditAny2Image": "Qwen Edit Any2Image",
+    "QwenEditAny2Latent": "Qwen Edit Any2Latent"
 }
