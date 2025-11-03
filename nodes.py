@@ -885,15 +885,19 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
                 samples = image.movedim(-1, 1)
                 print("ori_image.shape",samples.shape)
                 ori_height, ori_width = samples.shape[2:]
-                print("ori_height, ori_width", ori_height, ori_width)
                 ori_aspect_ratio = samples.shape[2] / samples.shape[3]
-                shorter_edge = round(ref_longest_edge * ( 1 / ori_aspect_ratio))
                 if samples.shape[2] > samples.shape[3]:
+                    shorter_edge = round(ref_longest_edge * ( 1 / ori_aspect_ratio))
                     scaled_height = ref_longest_edge
                     scaled_width = shorter_edge
                 else:
+                    shorter_edge = round(ref_longest_edge * ori_aspect_ratio)
                     scaled_height = shorter_edge
                     scaled_width = ref_longest_edge
+                    
+                print("ori_height, ori_width", ori_height, ori_width)
+                print("samples.shape[2], samples.shape[3]", samples.shape[2], samples.shape[3])
+                print("ref_longest_edge, shorter_edge", ref_longest_edge, shorter_edge)
                 
                 # pad only apply to main image
                 if ref_crop == "pad" and ref_main_image:
@@ -1119,7 +1123,7 @@ class QwenEditConfigPreparer:
                 "configs": ("LIST", {"default": None, "tooltip": "Configs list"}),
                 "to_ref": ("BOOLEAN", {"default": True, "tooltip": "Add image to reference latent"}),
                 "ref_main_image": ("BOOLEAN", {"default": True, "tooltip": "Set image as main image which would return the latent as output."}),
-                "ref_longest_edge": ("INT", {"default": 1024, "min": 512, "max": 4096, "step": 8, "tooltip": "Longest edge of the output latent"}),
+                "ref_longest_edge": ("INT", {"default": 1024, "min": 512, "max": 4096, "step": 1, "tooltip": "Longest edge of the output latent"}),
                 "ref_crop": (s.crop_methods, {"default": "pad", "tooltip": "Crop method for reference image"}),
                 "ref_upscale": (s.upscale_methods, {"default": "lanczos", "tooltip": "Upscale method for reference image"}),
     
