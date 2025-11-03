@@ -823,8 +823,8 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
             #    set_noise_mask=False,
                instruction="",
         ):
-        print("len(configs)")
-        print(len(configs))
+        # print("len(configs)")
+        # print(len(configs))
         llama_template = get_system_prompt(instruction)
         image_prompt = ""
         
@@ -835,7 +835,7 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
             "height": 0,
             "scale_by": 1.0,
         }
-        print("len(configs)", len(configs))
+        # print("len(configs)", len(configs))
         # check len(configs)
         assert len(configs) > 0, "No image provided"
         
@@ -872,43 +872,50 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
             vl_crop = image_obj["vl_crop"]
             vl_upscale = image_obj["vl_upscale"]
             
-            print("to_ref",to_ref)
-            print("ref_main_image",ref_main_image)
-            print("ref_longest_edge",ref_longest_edge)
-            print("ref_crop",ref_crop)
-            print("ref_upscale",ref_upscale)
+            # print("to_ref",to_ref)
+            # print("ref_main_image",ref_main_image)
+            # print("ref_longest_edge",ref_longest_edge)
+            # print("ref_crop",ref_crop)
+            # print("ref_upscale",ref_upscale)
             
             
             if not to_ref and not to_vl:
                 continue
             if to_ref:
                 samples = image.movedim(-1, 1)
-                print("ori_image.shape",samples.shape)
-                ori_height, ori_width = samples.shape[2:]
-                ori_aspect_ratio = samples.shape[2] / samples.shape[3]
-                if samples.shape[2] > samples.shape[3]:
-                    shorter_edge = round(ref_longest_edge * ( 1 / ori_aspect_ratio))
-                    scaled_height = ref_longest_edge
-                    scaled_width = shorter_edge
-                else:
-                    shorter_edge = round(ref_longest_edge * ori_aspect_ratio)
-                    scaled_height = shorter_edge
-                    scaled_width = ref_longest_edge
+                # print("ori_image.shape",samples.shape)
+                # ori_height, ori_width = samples.shape[2:]
+                ori_longest_edge = max(samples.shape[2], samples.shape[3])
+                scale_by = ori_longest_edge / ref_longest_edge
+                scaled_height = int(round(samples.shape[2] / scale_by))
+                scaled_width = int(round(samples.shape[3] / scale_by))
+                
+                # print("scaled_height,scaled_width",scaled_height,scaled_width)
+                # print(ref_longest_edge)
+                # ori_aspect_ratio = samples.shape[2] / samples.shape[3]
+                # if samples.shape[2] > samples.shape[3]:
+                #     shorter_edge = round(ref_longest_edge * ( 1 / ori_aspect_ratio))
+                #     scaled_height = ref_longest_edge
+                #     scaled_width = shorter_edge
+                # else:
+                #     shorter_edge = round(ref_longest_edge * ori_aspect_ratio)
+                #     scaled_height = shorter_edge
+                #     scaled_width = ref_longest_edge
                     
-                print("ori_height, ori_width", ori_height, ori_width)
-                print("samples.shape[2], samples.shape[3]", samples.shape[2], samples.shape[3])
-                print("ref_longest_edge, shorter_edge", ref_longest_edge, shorter_edge)
+                # print("ori_height, ori_width", ori_height, ori_width)
+                # print("samples.shape[2], samples.shape[3]", samples.shape[2], samples.shape[3])
+                # print("ref_longest_edge, shorter_edge", ref_longest_edge, shorter_edge)
                 
                 # pad only apply to main image
                 if ref_crop == "pad" and ref_main_image:
-                    print("In pad mode")
-                    print("scaled_width", scaled_width)
-                    print("scaled_height", scaled_height)
+                    # print("In pad mode")
+                    # print("scaled_width", scaled_width)
+                    # print("scaled_height", scaled_height)
                     crop = "center"
                     canvas_width = math.ceil(scaled_width / 8.0) * 8
                     canvas_height = math.ceil(scaled_height / 8.0) * 8
-                    print("canvas_width", canvas_width)
-                    print("canvas_height", canvas_height)
+                    # print("canvas_width", canvas_width)
+                    # print("canvas_height", canvas_height)
                     
                     # pad image to canvas size
                     canvas = torch.zeros(
@@ -917,9 +924,9 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
                         device=samples.device
                     )
                     resized_samples = comfy.utils.common_upscale(samples, scaled_width, scaled_height, ref_upscale, crop)
-                    print("resized_samples.shape", resized_samples.shape)
-                    print("samples.shape", samples.shape)
-                    print("canvas.shape", canvas.shape)
+                    # print("resized_samples.shape", resized_samples.shape)
+                    # print("samples.shape", samples.shape)
+                    # print("canvas.shape", canvas.shape)
                     resized_width = resized_samples.shape[3]
                     resized_height = resized_samples.shape[2]
                     
@@ -949,10 +956,10 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
                         "y": 0,
                         "width": canvas_width - resized_width,
                         "height": canvas_height - resized_height,
-                        "scale_by": 1 / scale_by
+                        "scale_by": round(1 / scale_by, 3)
                     }
                     
-                    print("pad_info", pad_info)
+                    # print("pad_info", pad_info)
                     s = canvas
                 else:
                     crop = ref_crop
@@ -961,8 +968,8 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
                         crop = "center"
                     width = round(scaled_width / 8.0) * 8
                     height = round(scaled_height / 8.0) * 8
-                    print("width",width)
-                    print("height",height)
+                    # print("width",width)
+                    # print("height",height)
                     s = comfy.utils.common_upscale(samples, width, height, ref_upscale, crop)
                 image = s.movedim(1, -1)
                 ref_latents.append(vae.encode(image[:, :, :, :3]))
@@ -1086,9 +1093,12 @@ class QwenEditConfigJsonParser():
         config.update(json_config)
         config["image"] = image
         
-        configs.append(config)
+        config_output = copy.deepcopy(configs)
+        del configs
+        
+        config_output.append(config)
         # print("len(configs)", len(configs))
-        return (configs, config, )
+        return (config_output, config, )
 
 class QwenEditConfigPreparer:
     upscale_methods = ["lanczos", "bicubic", "area"]
@@ -1164,12 +1174,14 @@ class QwenEditConfigPreparer:
             "vl_upscale": vl_upscale
         }
         
-        if configs is None:
-            configs = []
         
-        configs.append(config)
+        config_output = copy.deepcopy(configs)
+        del configs
+        
+        
+        config_output.append(config)
         # print("len(configs)", len(configs))
-        return (configs, config, )
+        return (config_output, config, )
 
 class QwenEditOutputExtractor:
     preset_keys = [
