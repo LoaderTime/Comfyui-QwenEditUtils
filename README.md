@@ -14,6 +14,8 @@ You can find complete ComfyUI workflow examples in the following files:
 - [`qwen edit custom full.json`](qwen edit custom full.json) - demonstrates advanced usage with full configuration options
 
 ## Update Log
+### v2.0.3
+- Added QwenEditAdaptiveLongestEdge for easier to get the best longest edge of the image.
 ### v2.0.0
 - Added TextEncodeQwenImageEditPlusCustom_lrzjason for highly customized image editing.
 - Added QwenEditConfigPreparer, QwenEditConfigJsonParser for creating image configurations.
