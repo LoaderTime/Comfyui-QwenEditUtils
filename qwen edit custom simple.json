@@ -816,66 +816,6 @@
       ]
     },
     {
-      "id": 176,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        720,
-        50
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 426
-        },
-        {
-          "localized_name": "lora_name",
-          "name": "lora_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "lora_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "strength_model",
-          "name": "strength_model",
-          "type": "FLOAT",
-          "widget": {
-            "name": "strength_model"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "localized_name": "MODEL",
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            427
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.50",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "qwen\\reverse_edit-8-16200.safetensors",
-        0.5
-      ]
-    },
-    {
       "id": 223,
       "type": "PrimitiveStringMultiline",
       "pos": [
@@ -1238,6 +1178,66 @@
       "widgets_values": [
         "{\n    \"to_ref\": true,\n    \"ref_main_image\": true,\n    \"ref_longest_edge\": 1024,\n    \"ref_crop\": \"center\",\n    \"ref_upscale\": \"lanczos\",\n    \"to_vl\": true,\n    \"vl_resize\": true,\n    \"vl_target_size\": 384,\n    \"vl_crop\": \"center\",\n    \"vl_upscale\": \"bicubic\"\n}"
       ]
+    },
+    {
+      "id": 176,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        720,
+        50
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 426
+        },
+        {
+          "localized_name": "lora_name",
+          "name": "lora_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_model",
+          "name": "strength_model",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_model"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            427
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "qwen\\consistence_edit_v2.safetensors",
+        0.15
+      ]
     }
   ],
   "links": [
@@ -1406,10 +1406,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6934334949441353,
+      "scale": 0.573085533011682,
       "offset": [
-        383.03728767887446,
-        -52.82188790980479
+        656.7636478781604,
+        88.52787507524769
       ]
     },
     "frontendVersion": "1.23.4"
