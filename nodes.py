@@ -1013,7 +1013,7 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
         # if set_noise_mask:
         #     latent_out["noise_mask"] = noise_mask
         
-        conditioning_output = conditioning
+        conditioning_output = conditioning_full_refs
         if not return_full_refs_cond:
             conditioning_output = conditioning_only_with_main_ref
         
