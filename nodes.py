@@ -876,7 +876,9 @@ class TextEncodeQwenImageEditPlusCustom_lrzjason:
             vl_crop = image_obj["vl_crop"]
             vl_upscale = image_obj["vl_upscale"]
             
-            mask = image_obj["mask"]
+            mask = None
+            if "mask" in image_obj:
+                mask = image_obj["mask"]
             
             samples = image.movedim(-1, 1)
             if mask is not None:
